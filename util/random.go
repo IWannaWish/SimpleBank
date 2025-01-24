@@ -8,6 +8,14 @@ import (
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
+var ownerNames = [50]string{
+	"Alex", "Emma", "Liam", "Sophia", "Noah", "Olivia", "Ethan", "Ava", "Mason", "Isabella",
+	"Lucas", "Mia", "Logan", "Amelia", "James", "Harper", "Benjamin", "Evelyn", "Henry", "Charlotte",
+	"William", "Abigail", "Oliver", "Ella", "Elijah", "Scarlett", "Michael", "Emily", "Daniel", "Elizabeth",
+	"Jackson", "Luna", "Sebastian", "Chloe", "Carter", "Grace", "Alexander", "Victoria", "Mateo", "Zoey",
+	"Matthew", "Penelope", "David", "Riley", "Joseph", "Layla", "Samuel", "Lily", "Leo", "Aria",
+}
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
@@ -31,7 +39,7 @@ func RandomString(n int) string {
 
 // RandomOwner generates a random owner name
 func RandomOwner() string {
-	return RandomString(6)
+	return ownerNames[RandomInt(0, 49)]
 }
 
 // RandomMoney generates a random amount of money
