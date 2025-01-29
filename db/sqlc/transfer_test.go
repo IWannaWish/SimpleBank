@@ -3,25 +3,17 @@ package db
 import (
 	"SimpleBank/util"
 	"context"
-	"database/sql"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
-func createRandomTransfer(t *testing.T) Transfer {
-	toAccount := createRandomAccount(t)
-	fromAccount := createRandomAccount(t)
+func createRandomTransfer(t *testing.T, fromAccount Account, toAccount Account) Transfer {
+
 	arg := CreateTransferParams{
-		FromAccountID: sql.NullInt64{
-			Int64: fromAccount.ID,
-			Valid: true,
-		},
-		ToAccountID: sql.NullInt64{
-			Int64: toAccount.ID,
-			Valid: true,
-		},
-		Amount: util.RandomInt(1, fromAccount.Balance),
+		fromAccount.ID,
+		toAccount.ID,
+		util.RandomInt(1, fromAccount.Balance),
 	}
 	transfer, err := testQueries.CreateTransfer(context.Background(), arg)
 
@@ -39,11 +31,15 @@ func createRandomTransfer(t *testing.T) Transfer {
 }
 
 func TestCreateTransfer(t *testing.T) {
-	createRandomTransfer(t)
+	fromAccount := createRandomAccount(t)
+	toAccount := createRandomAccount(t)
+	createRandomTransfer(t, fromAccount, toAccount)
 }
 
 func TestGetTransfer(t *testing.T) {
-	transfer1 := createRandomTransfer(t)
+	fromAccount := createRandomAccount(t)
+	toAccount := createRandomAccount(t)
+	transfer1 := createRandomTransfer(t, fromAccount, toAccount)
 	transfer2, err := testQueries.GetTransfer(context.Background(), transfer1.ID)
 
 	require.NoError(t, err)
@@ -57,5 +53,37 @@ func TestGetTransfer(t *testing.T) {
 }
 
 func TestListTransfers(t *testing.T) {
+	// Создаём два аккаунта
+	fromAccount := createRandomAccount(t)
+	toAccount := createRandomAccount(t)
 
+	// Создаём 10 случайных переводов
+	for i := 0; i < 10; i++ {
+		createRandomTransfer(t, fromAccount, toAccount)
+	}
+
+	// Параметры для выборки переводов
+	arg := ListTransfersParams{
+		fromAccount.ID,
+		toAccount.ID,
+		5,
+		0,
+	}
+
+	// Выполнение тестируемой функции
+	transfers, err := testQueries.ListTransfers(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, transfers)
+
+	// Проверка, что количество результатов соответствует лимиту
+	require.Len(t, transfers, int(arg.Limit))
+
+	// Проверка, что данные корректны
+	for _, transfer := range transfers {
+		require.NotZero(t, transfer.ID)
+		require.Equal(t, fromAccount.ID, transfer.FromAccountID)
+		require.Equal(t, toAccount.ID, transfer.ToAccountID)
+		require.NotZero(t, transfer.Amount)
+		require.NotZero(t, transfer.CreatedAt)
+	}
 }
